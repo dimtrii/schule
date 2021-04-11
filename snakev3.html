@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+  <html>
+    <head>
+      <title>Snake</title>
+    </head>
+
+    <body>
+      <canvas id="canvas" width="400" height="400"></canvas>
+
+      <script>
+        //konstanten
+        const MAP_SIZE = 10
+        const BLOCK_SIZE = 10
+        const FULL_SIZE= MAP_SIZE * BLOCK_SIZE
+        const KEY_RIGHT = 39;
+        const KEY_LEFT = 37;
+        const KEY_UP = 38;
+        const KEY_DOWN = 40;
+
+        class Snake{
+
+        this.direction = 0 //keine bewegung
+
+        this.direction = 1 //rechts
+        this.direction = 2 //links
+        this.direction = 3 //unten
+        this.direction = 4 //oben
+
+          constructor(canvas){
+
+            //canvas graphics
+            this.can = document.getElementById(canvas);
+            this.can.width = FULL_SIZE;
+            this.can.height= FULL_SIZE;
+            this.g = this.can.getContext("2d");
+            
+            //keyevent erstellen
+            window.addEventListener("keydown",(event)=>{
+                this.event(event.keyCode);
+                });
+            
+            //start()
+            this.start();
+
+            //update interval erstellen
+            window.setInterval(()=>{
+                this.update();
+              },100);
+
+            //draw()
+            this.draw();
+
+          }
+
+          event(key){
+                  //wenn pfeiltasten gedrückt wurden ändere richtung
+                  if(key == KEY_RIGHT || key == KEY_LEFT || key == KEY_UP || key == KEY_DOWN){
+                    this.direction = key;
+                  }
+                }
+
+
+          update(){
+          //klone schlangekopf position
+                  var temp = {
+                    x:this.snake[0].x,
+                    y:this.snake[0].y
+                  }
+
+                  //bewege schlange in gegebene richtung
+                  switch(this.direction){
+                    case KEY_RIGHT:
+                      this.snake[0].x++;
+                      if(this.snake[0].x >= MAP_SIZE){
+                        this.snake[0].x = 0;
+                      }
+                      break;
+                    case KEY_LEFT:
+                      this.snake[0].x--;
+                      if(this.snake[0].x < 0){
+                        this.snake[0].x = MAP_SIZE-1;
+                      }
+                      break;
+                    case KEY_DOWN:
+                      this.snake[0].y++;
+                      if(this.snake[0].y >= MAP_SIZE){
+                        this.snake[0].y = 0;
+                      }
+                      break
+                    case KEY_UP:
+                      this.snake[0].y--;
+                      if(this.snake[0].y < 0){
+                        this.snake[0].y = MAP_SIZE-1;
+                      }
+                      break;
+                    default:
+                      return;
+                  }
+
+                  //prüfe kollision
+                  for(var i = 1;i < this.snake.length;i++){
+                    if(this.snake[0].x == this.snake[i].x && this.snake[0].y == this.snake[i].y){
+                      return this.start();
+                    }
+                  }
+
+                  //wenn schlange auf essen trifft
+                  if(this.snake[0].x == this.food.x && this.snake[0].y == this.food.y){
+
+                    this.snake.push({
+                      x:undefined,
+                      y:undefined
+                    });
+
+                    this.foodpos();
+                  }
+
+                  //passe schlange an
+                  for(var i = 1;i < this.snake.length;i++){
+                    var ntemp = {
+                      x:this.snake[i].x,
+                      y:this.snake[i].y
+                    };
+                    this.snake[i].x = temp.x;
+                    this.snake[i].y = temp.y;
+                    temp = ntemp;
+                  }
+          }
+
+          randpos(){
+            
+            return {
+              x:Math.floor(Math.random()*MAP_SIZE),
+              y:Math.floor(Math.random()*MAP_SIZE)
+            }
+
+          }
+
+          foodpos(){
+
+            do{
+              this.food = this.randpos();
+
+              var found = false; 
+
+              for(var i = 0; i < this.snake.length; i++){
+                if(this.snake[i].x == this.food.x && this.snake[i].y == this.food.y){
+                  found = true;
+                  break;
+                }
+              }
+            }while(found);
+          }
+
+
+          start() {
+            this.direction = 0;
+            this.snake = [randompos()];
+            this.foodpos();
+            this.counter = 1;
+           }                       
+
+
+          draw() {
+
+            window.requestAnimationFrame(()=>{
+                    this.draw();
+                  });
+            
+            this.g.fillStyle = "magenta";
+            this.g.fillRect(0, 0, FULL_SIZE, FULL_SIZE);
+
+            this.g.fillStyle = "blue";
+            for (var i = 0; i < this.snake.length; i++) {
+              this.fillRect(this.snake[i].x, this.snake[i].y, BLOCK_SIZE, BLOCK_SIZE);
+              this.fillStyle = "navy";
+            }
+            
+            this.g.fillStyle = "red";
+            this.g.fillRect(this.food.x, this.food.y, BLOCK_SIZE, BLOCK_SIZE);
+
+            this.g.fillText("Level: "+this.snake.length, 300, 40);
+              }
+/*
+
+var myAudio = new Audio();
+var myAudio2 = new Audio();
+  myAudio.src = "data:audio/wav;base64,UklGRt4PAABXQVZFZm10IBAAAAABAAEARKwAAAAAAAABAAgAZGF0YboPAAAAxcPBv728uri2tLKwrqyqqKako6GfnZuZl5WTkZCOjIqIhoSCgH59e3l3dXNxb25samhmZGJhX11bWVdVVFJQTkxKSEdFQ0E/Pjw6kcXDwb+9u7q4trSysK6sq6mnpaOhn56cmpiWlJKRj42LiYeFhIKAfnx7eXd1c3FwbmxqaGZlY2FfXlxaWFZUU1FPTUtKSEZEQ0E/PTuAxMLAvry7ube1s7GwrqyqqKelo6GfnZyamJaVk5GPjYyKiIaEg4F/fXt6eHZ0c3FvbWtqaGZlY2FfXVxaWFZVU1FPTkxKSUdFQ0JAPjyhwsC+vbu5t7W0srCuraupp6akoqCfnZuZmJaUkpGPjYuKiIaEg4F/fXx6eHd1c3FwbmxraWdlZGJgX11bWVhWVFNRT05MSklHRUNCQD5vwb++vLq5t7WzsrCuraupp6akoqGfnZuamJaVk5GPjoyKiYeFhIKAf317enh2dXNxcG5sa2lnZmRiYV9dXFpYV1VUUlBPTUtKSEZFQ0FAX8C+vbu5uLa0s7GvrqyqqaelpKKgn52bmpiWlZORkI6Ni4mIhoSDgX9+fHp5d3Z0cnFvbmxqaWdlZGJhX15cWllXVlRSUU9NTEpJR0ZEQ0GAvr27ubi2tLOxsK6sq6mopqSjoZ+enJuZl5aUk5GPjoyLiYeGhIOBgH58e3l4dnVzcXBubWtqaGZlY2JgX11cWlhXVVRSUU9OTEtJSEZEQ1G9vLq5t7a0srGvrqyrqaempKOhoJ6cm5mYlpWTkpCOjYuKiIeFhIKBf358e3l3dnRzcXBubWtqaGdlZGJhX15cW1lYVlVTUlBPTUxKSUdGREO8u7m4trWzsbCurauqqKelpKKhn56cm5mYlpWTkpCPjYyKiYeGhIOBgH59e3p4d3V0c3Fwbm1ramhnZWRiYWBeXVtaWFdVVFJRUE5NS0pIR0Ziurm3trSzsbCvrayqqaempKOhoJ6dm5qZl5aUk5GQjo2LiomHhoSDgYB/fXx6eXd2dHNycG9tbGtpaGZlY2JhX15dW1pYV1VUU1FQTk1MSklIRpy4t7W0srGwrq2rqqinpqSjoaCfnZyamZeWlZOSkI+OjIuJiIeFhIKBgH59fHp5d3Z1c3Jxb25sa2poZ2ZkY2JgX11cW1lYV1VUU1FQT01MS0lIjre2tLOxsK+trKqpqKalpKKhn56dm5qZl5aVk5KQj46Mi4qIh4aEg4KAf358e3p4d3Z0c3Jwb25sa2poZ2ZkY2JhX15dW1pZV1ZVU1JRUE5NTEpJm7W0s7Gwr62sq6mop6Wko6Ggn52cm5mYl5WUk5KQj46Mi4qIh4aFg4KBf359e3p5eHZ1dHJxcG9tbGtqaGdmZGNiYV9eXVxaWVhXVVRTUlBPTk1LWLWzsrGvrq2sqqmopqWko6Ggn56cm5qYl5aVk5KRkI6NjIuJiIeGhIOCgX9+fXx6eXh3dXRzcnBvbm1samloZ2VkY2JhX15dXFtZWFdWVVNSUVBOTUymsrGwrq2sq6mop6alo6KhoJ6dnJuZmJeWlZOSkZCPjYyLioiHhoWEgoGAf358e3p5eHd1dHNycW9ubWxramhnZmVkYmFgX15dW1pZWFdWVVNSUVBPTqWxr66trKuqqKempaSioaCfnpybmpmYl5WUk5KRkI6NjIuKiYeGhYSDgoB/fn18e3p4d3Z1dHNycG9ubWxramlnZmVkY2JhX15dXFtaWVhXVlRTUlFQW7Cvrq2rqqmop6alo6KhoJ+enZuamZiXlpWUkpGQj46NjIuJiIeGhYSDgoF/fn18e3p5eHd2dHNycXBvbm1sa2ppZ2ZlZGNiYWBfXl1cWllYV1ZVVFNSUYuurayrqqinpqWko6KhoJ+dnJuamZiXlpWUk5GQj46NjIuKiYiHhoWEgoGAf359fHt6eXh3dnV0c3JxcG5tbGtqaWhnZmVkY2JhYF9eXVxbWllYV1ZVVFN0rayrqainpqWko6KhoJ+enZybmpmYl5aUk5KRkI+OjYyLiomIh4aFhIOCgYB/fn18e3p5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhYF9eXVxbWllYV1ZVVHWrqqmop6alpKOioaCfnp2cm5qZmJeWlZSTkpGQj46NjIuKiYiHhoWEg4KBgH9+fXx7e3p5eHd2dXRzcnFwb25tbGtqaWhnZmVlZGNiYWBfXl1cW1pZWFdXVoqpqKempaSjoqGhoJ+enZybmpmYl5aVlJOSkZCPjo2NjIuKiYiHhoWEg4KBgH9/fn18e3p5eHd2dXRzc3JxcG9ubWxramppaGdmZWRjYmFhYF9eXVxbWllZWFeop6alpaSjoqGgn56dnJuampmYl5aVlJOSkZCQj46NjIuKiYiHh4aFhIOCgYB/f359fHt6eXh4d3Z1dHNycnFwb25tbGtramloZ2ZlZWRjYmFgYF9eXVxbW1pZiaalpKOjoqGgn56dnJybmpmYl5aVlZSTkpGQj4+OjYyLiomJiIeGhYSEg4KBgH9+fn18e3p5eXh3dnV0dHNycXBwb25tbGtramloZ2dmZWRjY2JhYF9fXl1cW1uApaSjoqGgoJ+enZybm5qZmJeWlpWUk5KRkZCPjo2NjIuKiYmIh4aFhYSDgoGAgH9+fX18e3p5eXh3dnV1dHNycnFwb25ubWxra2ppaGdnZmVkZGNiYWFgX15eXVyAo6KhoaCfnp2dnJuamZmYl5aVlZSTkpKRkI+Ojo2Mi4uKiYiIh4aFhYSDgoKBgH9/fn18e3t6eXh4d3Z2dXRzc3JxcHBvbm1tbGtramloaGdmZWVkY2NiYWFgX15ekaGgoJ+enZ2cm5qamZiXl5aVlJSTkpGRkI+Pjo2MjIuKiYmIh4eGhYSEg4KCgYB/f359fXx7enp5eHh3dnZ1dHNzcnFxcG9vbm1tbGtqamloaGdmZmVkZGNiYmFgYGegn56enZycm5qZmZiXl5aVlZSTkpKRkJCPjo6NjIyLioqJiIeHhoWFhIODgoGBgH9/fn19fHt7enl5eHd3dnV1dHRzcnJxcHBvbm5tbGxramppaWhnZ2ZlZWRkY2JiYY+enZycm5qamZiYl5aWlZSUk5KSkZGQj4+OjY2Mi4uKiYmIiIeGhoWEhIOCgoGBgH9/fn19fHx7enp5eHh3d3Z1dXR0c3JycXFwb29ubW1sbGtramlpaGhnZmZlZWRjY4CcnJuampmYmJeXlpWVlJOTkpKRkJCPj46NjYyMi4qKiYmIh4eGhoWEhIODgoGBgIB/f359fXx8e3p6eXl4eHd2dnV1dHRzcnJxcXBwb29ubW1sbGtramppaGhnZ2ZmZWWAmpqZmZiYl5aWlZWUlJOSkpGRkJCPjo6NjYyMi4qKiYmIiIeGhoWFhISDg4KCgYCAf39+fn19fHx7enp5eXh4d3d2dnV1dHRzc3JycXBwb29ubm1tbGxra2pqaWloaGdnZoaZmJiXl5aVlZSUk5OSkpGRkJCPjo6NjYyMi4uKiomJiIiHh4aGhYWEhIODgoKBgYCAf39+fn19fHx7e3p6eXl4eHd3dnZ1dXR0c3NycnFxcHBvb25ubW1tbGxra2pqaWloaJGXlpaVlZSUk5OSkpGRkJCPj46OjY2MjIuLioqKiYmIiIeHhoaFhYSEg4OCgoGBgYCAf39+fn19fHx7e3t6enl5eHh3d3d2dnV1dHRzc3JycnFxcHBvb29ubm1tbGxsa2tqanWVlZSUlJOTkpKRkZCQj4+Ojo6NjYyMi4uKioqJiYiIh4eGhoaFhYSEg4ODgoKBgYCAgH9/fn5+fX18fHt7e3p6eXl5eHh3d3Z2dnV1dHR0c3NzcnJxcXFwcG9vb25ubW1tbGxripOTk5KSkZGQkJCPj46Ojo2NjIyLi4uKiomJiYiIh4eHhoaFhYWEhIODg4KCgoGBgICAf39+fn59fX18fHt7e3p6enl5eHh4d3d3dnZ2dXV0dHRzc3NycnJxcXFwcG9vb25ubm17kpGRkZCQj4+Pjo6OjY2MjIyLi4uKiomJiYiIiIeHh4aGhYWFhISEg4ODgoKCgYGBgIB/f39+fn59fX18fHx7e3t6enp5eXl4eHh3d3d2dnZ2dXV1dHR0c3NzcnJycXFxcXBwcG9zkJCPj4+Ojo6NjY2MjIyLi4uKioqJiYmIiIiHh4eGhoaFhYWEhISDg4ODgoKCgYGBgICAf39/f35+fn19fXx8fHt7e3t6enp5eXl5eHh4d3d3d3Z2dnV1dXV0dHR0c3NzcnJycnFxcY6Ojo2NjYyMjIuLi4uKioqJiYmJiIiIh4eHhoaGhoWFhYSEhISDg4ODgoKCgYGBgYCAgIB/f39/fn5+fX19fXx8fHx7e3t7enp6enl5eXl4eHh4d3d3d3Z2dnZ1dXV1dXR0dHRzc3NzjIyMjIuLi4qKioqJiYmJiIiIiIeHh4eGhoaGhYWFhYSEhISDg4ODgoKCgoKBgYGBgICAgH9/f39/fn5+fn19fX19fHx8fHt7e3t7enp6enp5eXl5eXh4eHh3d3d3d3d2dnZ2dnV1dXV3ioqKioqJiYmJiIiIiIeHh4eHhoaGhoaFhYWFhISEhISDg4ODg4KCgoKCgYGBgYGAgICAgIB/f39/f35+fn5+fX19fX19fHx8fHx7e3t7e3t6enp6enp5eXl5eXl4eHh4eHh4d3d3d3d3e4iIiIiIiIeHh4eHhoaGhoaGhYWFhYWEhISEhISDg4ODg4OCgoKCgoKBgYGBgYGAgICAgICAf39/f39/f35+fn5+fn19fX19fX19fHx8fHx8fHt7e3t7e3t7enp6enp6enp5eXl5eXl5eXiAh4aGhoaGhoWFhYWFhYWEhISEhISEhIODg4ODg4OCgoKCgoKCgoGBgYGBgYGBgICAgICAgIB/f39/f39/f39+fn5+fn5+fn59fX19fX19fX19fXx8fHx8fHx8fHx7e3t7e3t7e3t7e3t6enqDhYSEhISEhISEhIODg4ODg4ODg4OCgoKCgoKCgoKCgYGBgYGBgYGBgYGAgICAgICAgICAgIB/f39/f39/f39/f39/f35+fn5+fn5+fn5+fn5+fn19fX19fX19fX19fX19fX19fX18fHx8fHx+g4ODgoKCgoKCgoKCgoKCgoKBgYGBgYGBgYGBgYGBgYGBgYCAgICAgICAgICAgICAgICAgICAf39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39+fn5+fn5+fn5+fn5+fn5+fn5+fn5+foCBgYGBgYGBgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIB/f39/f39/f39/f39/f39/f4A=";
+  
+ var btn = document.getElementById("play");
+
+btn.addEventListener("click",()=>{
+
+if(!myAudio.paused){
+console.log("playing");
+}
+
+myAudio.oncanplaythrough = function(){
+ 
+myAudio.play
+();
+}
+  
+  myAudio.currentPos = 0;
+ 
+  
+  
+  
+});m
+
+*/
+        
+
+          new Snake();
+      </script>
+    </body>
+  </html>
+
